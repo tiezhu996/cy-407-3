@@ -16,6 +16,7 @@ export interface Tour {
   nodes: TourNode[];
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string;
 }
 
 export type TourDraft = Omit<Tour, 'id' | 'createdAt' | 'updatedAt'>;

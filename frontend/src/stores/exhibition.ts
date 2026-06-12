@@ -26,8 +26,11 @@ export const useExhibitionStore = defineStore('exhibition', {
     loaded: false
   }),
   getters: {
-    getById: (state) => (id: string) => state.exhibitions.find((exhibition) => exhibition.id === id),
-    published: (state) => state.exhibitions.filter((exhibition) => exhibition.status === ExhibitionStatus.Published)
+    activeExhibitions: (state) => state.exhibitions.filter((e) => !e.deletedAt),
+    deletedExhibitions: (state) => state.exhibitions.filter((e) => e.deletedAt),
+    getById: (state) => (id: string) => state.exhibitions.find((exhibition) => exhibition.id === id && !exhibition.deletedAt),
+    getDeletedById: (state) => (id: string) => state.exhibitions.find((exhibition) => exhibition.id === id && exhibition.deletedAt),
+    published: (state) => state.exhibitions.filter((exhibition) => exhibition.status === ExhibitionStatus.Published && !exhibition.deletedAt)
   },
   actions: {
     async load() {
@@ -62,6 +65,21 @@ export const useExhibitionStore = defineStore('exhibition', {
       await exhibitionRepository.save(updated);
     },
     async deleteExhibition(id: string) {
+      const current = this.getById(id);
+      if (!current) return;
+      const updated: Exhibition = { ...current, deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      this.exhibitions = this.exhibitions.map((exhibition) => (exhibition.id === id ? updated : exhibition));
+      await exhibitionRepository.save(updated);
+    },
+    async restoreExhibition(id: string) {
+      const current = this.getDeletedById(id);
+      if (!current) return;
+      const { deletedAt: _deletedAt, ...rest } = current;
+      const updated: Exhibition = { ...rest, updatedAt: new Date().toISOString() };
+      this.exhibitions = this.exhibitions.map((exhibition) => (exhibition.id === id ? updated : exhibition));
+      await exhibitionRepository.save(updated);
+    },
+    async permanentDeleteExhibition(id: string) {
       this.exhibitions = this.exhibitions.filter((exhibition) => exhibition.id !== id);
       await exhibitionRepository.remove(id);
     },

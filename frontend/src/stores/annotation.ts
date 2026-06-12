@@ -42,8 +42,11 @@ export const useAnnotationStore = defineStore('annotation', {
     loaded: false
   }),
   getters: {
+    activeAnnotations: (state) => state.annotations.filter((a) => !a.deletedAt),
+    deletedAnnotations: (state) => state.annotations.filter((a) => a.deletedAt),
     byArtifactId: (state) => (artifactId: string) =>
-      state.annotations.filter((annotation) => annotation.artifactId === artifactId)
+      state.annotations.filter((annotation) => annotation.artifactId === artifactId && !annotation.deletedAt),
+    getDeletedById: (state) => (id: string) => state.annotations.find((annotation) => annotation.id === id && annotation.deletedAt)
   },
   actions: {
     async load() {
@@ -69,13 +72,28 @@ export const useAnnotationStore = defineStore('annotation', {
       return annotation;
     },
     async updateAnnotation(id: string, patch: Partial<AnnotationDraft>) {
-      const current = this.annotations.find((annotation) => annotation.id === id);
+      const current = this.annotations.find((annotation) => annotation.id === id && !annotation.deletedAt);
       if (!current) return;
       const updated: Annotation = { ...current, ...patch, updatedAt: new Date().toISOString() };
       this.annotations = this.annotations.map((annotation) => (annotation.id === id ? updated : annotation));
       await annotationRepository.save(updated);
     },
     async deleteAnnotation(id: string) {
+      const current = this.annotations.find((annotation) => annotation.id === id && !annotation.deletedAt);
+      if (!current) return;
+      const updated: Annotation = { ...current, deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      this.annotations = this.annotations.map((annotation) => (annotation.id === id ? updated : annotation));
+      await annotationRepository.save(updated);
+    },
+    async restoreAnnotation(id: string) {
+      const current = this.getDeletedById(id);
+      if (!current) return;
+      const { deletedAt: _deletedAt, ...rest } = current;
+      const updated: Annotation = { ...rest, updatedAt: new Date().toISOString() };
+      this.annotations = this.annotations.map((annotation) => (annotation.id === id ? updated : annotation));
+      await annotationRepository.save(updated);
+    },
+    async permanentDeleteAnnotation(id: string) {
       this.annotations = this.annotations.filter((annotation) => annotation.id !== id);
       await annotationRepository.remove(id);
     }

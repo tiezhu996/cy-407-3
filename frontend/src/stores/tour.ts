@@ -32,8 +32,11 @@ export const useTourStore = defineStore('tour', {
     loaded: false
   }),
   getters: {
-    getById: (state) => (id: string) => state.tours.find((tour) => tour.id === id),
-    byExhibitionId: (state) => (exhibitionId: string) => state.tours.filter((tour) => tour.exhibitionId === exhibitionId)
+    activeTours: (state) => state.tours.filter((t) => !t.deletedAt),
+    deletedTours: (state) => state.tours.filter((t) => t.deletedAt),
+    getById: (state) => (id: string) => state.tours.find((tour) => tour.id === id && !tour.deletedAt),
+    getDeletedById: (state) => (id: string) => state.tours.find((tour) => tour.id === id && tour.deletedAt),
+    byExhibitionId: (state) => (exhibitionId: string) => state.tours.filter((tour) => tour.exhibitionId === exhibitionId && !tour.deletedAt)
   },
   actions: {
     async load() {
@@ -43,7 +46,7 @@ export const useTourStore = defineStore('tour', {
         const artifactStore = useArtifactStore();
         const exhibition = exhibitionStore.exhibitions[0];
         if (exhibition) {
-          const seed = createSeedTour(exhibition.id, artifactStore.artifacts.map((artifact) => artifact.id));
+          const seed = createSeedTour(exhibition.id, artifactStore.activeArtifacts.map((artifact) => artifact.id));
           await tourRepository.save(seed);
           this.tours = [seed];
         }
@@ -72,6 +75,21 @@ export const useTourStore = defineStore('tour', {
       await tourRepository.save(updated);
     },
     async deleteTour(id: string) {
+      const current = this.getById(id);
+      if (!current) return;
+      const updated: Tour = { ...current, deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      this.tours = this.tours.map((tour) => (tour.id === id ? updated : tour));
+      await tourRepository.save(updated);
+    },
+    async restoreTour(id: string) {
+      const current = this.getDeletedById(id);
+      if (!current) return;
+      const { deletedAt: _deletedAt, ...rest } = current;
+      const updated: Tour = { ...rest, updatedAt: new Date().toISOString() };
+      this.tours = this.tours.map((tour) => (tour.id === id ? updated : tour));
+      await tourRepository.save(updated);
+    },
+    async permanentDeleteTour(id: string) {
       this.tours = this.tours.filter((tour) => tour.id !== id);
       await tourRepository.remove(id);
     },

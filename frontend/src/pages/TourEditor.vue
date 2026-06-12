@@ -20,7 +20,7 @@
         </div>
         <TourTimeline
           :nodes="tour.nodes"
-          :artifacts="artifactStore.artifacts"
+          :artifacts="artifactStore.activeArtifacts"
           :selected-node-id="selectedNodeId"
           @select="selectedNodeId = $event"
           @reorder="tourStore.reorderNodes(tour.id, $event)"
@@ -83,9 +83,9 @@ async function saveTourName() {
 }
 
 async function addNode() {
-  if (!tour.value || !artifactStore.artifacts[0]) return;
+  if (!tour.value || !artifactStore.activeArtifacts[0]) return;
   await tourStore.addNode(tour.value.id, {
-    artifactId: artifactStore.artifacts[0].id,
+    artifactId: artifactStore.activeArtifacts[0].id,
     cameraPosition: { x: 3.4, y: 2.2, z: 5 },
     targetPosition: { x: 0, y: 0, z: 0 },
     transitionMs: 2200,

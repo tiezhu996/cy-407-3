@@ -72,7 +72,7 @@ let player: TourPlayerControls | null = null;
 
 const exhibition = computed(() => {
   const id = String(route.params.id ?? '');
-  return exhibitionStore.getById(id) ?? exhibitionStore.exhibitions[0];
+  return exhibitionStore.getById(id) ?? exhibitionStore.activeExhibitions[0];
 });
 
 const artifacts = computed<Artifact[]>(() => {

@@ -11,6 +11,7 @@ export interface Exhibition {
   status: ExhibitionStatus;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string;
 }
 
 export type ExhibitionDraft = Omit<Exhibition, 'id' | 'createdAt' | 'updatedAt'>;

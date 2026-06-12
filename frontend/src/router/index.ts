@@ -4,6 +4,7 @@ import ArtifactDetail from '@/pages/ArtifactDetail.vue';
 import ExhibitionManage from '@/pages/ExhibitionManage.vue';
 import TourEditor from '@/pages/TourEditor.vue';
 import ArtifactManage from '@/pages/ArtifactManage.vue';
+import RecycleBin from '@/pages/RecycleBin.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -36,6 +37,11 @@ const router = createRouter({
       path: '/manage/artifacts',
       name: 'artifact-manage',
       component: ArtifactManage
+    },
+    {
+      path: '/manage/recycle-bin',
+      name: 'recycle-bin',
+      component: RecycleBin
     }
   ],
   scrollBehavior: () => ({ top: 0 })

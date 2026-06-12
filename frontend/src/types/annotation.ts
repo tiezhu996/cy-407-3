@@ -15,6 +15,7 @@ export interface Annotation {
   iconType: AnnotationIcon;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string;
 }
 
 export type AnnotationDraft = Omit<Annotation, 'id' | 'createdAt' | 'updatedAt'>;

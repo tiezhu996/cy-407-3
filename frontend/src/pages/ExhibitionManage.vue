@@ -11,7 +11,7 @@
     <div class="manage-grid">
       <section class="exhibition-list">
         <ExhibitionCard
-          v-for="item in exhibitionStore.exhibitions"
+          v-for="item in exhibitionStore.activeExhibitions"
           :key="item.id"
           :exhibition="item"
           :artifact-count="item.artifactIds.length"
@@ -86,7 +86,7 @@ const message = useMessage();
 const artifactStore = useArtifactStore();
 const exhibitionStore = useExhibitionStore();
 
-const selectedId = ref(exhibitionStore.exhibitions[0]?.id ?? '');
+const selectedId = ref(exhibitionStore.activeExhibitions[0]?.id ?? '');
 const isCreating = ref(false);
 const draft = reactive<ExhibitionDraft>(emptyDraft());
 
@@ -118,7 +118,7 @@ function emptyDraft(): ExhibitionDraft {
     title: '',
     intro: '',
     curator: '',
-    artifactIds: artifactStore.artifacts.map((artifact) => artifact.id),
+    artifactIds: artifactStore.activeArtifacts.map((artifact) => artifact.id),
     themeColor: '#173f35',
     backgroundMusicUrl: '',
     status: ExhibitionStatus.Draft
@@ -163,7 +163,7 @@ async function publishSelected() {
 async function deleteSelected() {
   if (!selectedId.value) return;
   await exhibitionStore.deleteExhibition(selectedId.value);
-  selectedId.value = exhibitionStore.exhibitions[0]?.id ?? '';
+  selectedId.value = exhibitionStore.activeExhibitions[0]?.id ?? '';
   isCreating.value = !selectedId.value;
   Object.assign(draft, selected.value ?? emptyDraft());
   message.success('展览已删除');

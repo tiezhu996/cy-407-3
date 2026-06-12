@@ -17,7 +17,7 @@
     <div class="library-grid">
       <section class="artifact-list" :class="viewMode">
         <ArtifactCard
-          v-for="artifact in artifactStore.artifacts"
+          v-for="artifact in artifactStore.activeArtifacts"
           :key="artifact.id"
           :artifact="artifact"
           :active="artifact.id === selectedId"
@@ -87,7 +87,7 @@ const router = useRouter();
 const message = useMessage();
 const artifactStore = useArtifactStore();
 const viewMode = ref<'grid' | 'list'>('grid');
-const selectedId = ref(artifactStore.artifacts[0]?.id ?? '');
+const selectedId = ref(artifactStore.activeArtifacts[0]?.id ?? '');
 const isCreating = ref(false);
 const draft = reactive<ArtifactDraft>(artifactStore.createEmptyDraft());
 
@@ -177,7 +177,7 @@ async function uploadFiles(payload: { images: File[]; model?: File }) {
 
 async function deleteArtifact(id: string) {
   await artifactStore.deleteArtifact(id);
-  selectedId.value = artifactStore.artifacts[0]?.id ?? '';
+  selectedId.value = artifactStore.activeArtifacts[0]?.id ?? '';
   isCreating.value = !selectedId.value;
   Object.assign(draft, selectedArtifact.value ?? artifactStore.createEmptyDraft());
   message.success('展品已删除');

@@ -15,6 +15,7 @@ export interface Artifact {
   modelFileId?: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string;
 }
 
 export type ArtifactDraft = Omit<Artifact, 'id' | 'createdAt' | 'updatedAt'>;

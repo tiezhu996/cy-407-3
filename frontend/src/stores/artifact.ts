@@ -94,9 +94,12 @@ export const useArtifactStore = defineStore('artifact', {
     loaded: false
   }),
   getters: {
-    getById: (state) => (id: string) => state.artifacts.find((artifact) => artifact.id === id),
+    activeArtifacts: (state) => state.artifacts.filter((a) => !a.deletedAt),
+    deletedArtifacts: (state) => state.artifacts.filter((a) => a.deletedAt),
+    getById: (state) => (id: string) => state.artifacts.find((artifact) => artifact.id === id && !artifact.deletedAt),
+    getDeletedById: (state) => (id: string) => state.artifacts.find((artifact) => artifact.id === id && artifact.deletedAt),
     byCategory: (state) => (category: CraftCategory) =>
-      state.artifacts.filter((artifact) => artifact.category === category)
+      state.artifacts.filter((artifact) => artifact.category === category && !artifact.deletedAt)
   },
   actions: {
     async load() {
@@ -135,7 +138,23 @@ export const useArtifactStore = defineStore('artifact', {
     async deleteArtifact(id: string) {
       const current = this.getById(id);
       if (!current) return;
-      await Promise.all([...current.imageFileIds, current.modelFileId].filter(Boolean).map((fileId) => deleteBlobFile(fileId as string)));
+      const updated: Artifact = { ...current, deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      this.artifacts = this.artifacts.map((artifact) => (artifact.id === id ? updated : artifact));
+      await artifactRepository.save(updated);
+    },
+    async restoreArtifact(id: string) {
+      const current = this.getDeletedById(id);
+      if (!current) return;
+      const { deletedAt: _deletedAt, ...rest } = current;
+      const updated: Artifact = { ...rest, updatedAt: new Date().toISOString() };
+      this.artifacts = this.artifacts.map((artifact) => (artifact.id === id ? updated : artifact));
+      await artifactRepository.save(updated);
+    },
+    async permanentDeleteArtifact(id: string) {
+      const current = this.getDeletedById(id) ?? this.getById(id);
+      if (current) {
+        await Promise.all([...current.imageFileIds, current.modelFileId].filter(Boolean).map((fileId) => deleteBlobFile(fileId as string)));
+      }
       this.artifacts = this.artifacts.filter((artifact) => artifact.id !== id);
       await artifactRepository.remove(id);
     },

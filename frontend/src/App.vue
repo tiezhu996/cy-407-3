@@ -12,6 +12,10 @@
             <RouterLink to="/manage/artifacts">展品库</RouterLink>
             <RouterLink to="/manage/exhibitions">展览管理</RouterLink>
             <RouterLink :to="tourPath">导览编辑</RouterLink>
+            <RouterLink to="/manage/recycle-bin" class="recycle-link">
+              回收站
+              <n-badge v-if="trashCount > 0" :value="trashCount" :max="99" />
+            </RouterLink>
           </nav>
         </header>
         <main>
@@ -41,8 +45,16 @@ const annotationStore = useAnnotationStore();
 const tourStore = useTourStore();
 const ready = ref(false);
 
-const galleryPath = computed(() => `/exhibitions/${exhibitionStore.exhibitions[0]?.id ?? 'exhibition-heritage-hall'}`);
-const tourPath = computed(() => `/manage/tours/${tourStore.tours[0]?.id ?? 'tour-default-route'}`);
+const galleryPath = computed(() => `/exhibitions/${exhibitionStore.activeExhibitions[0]?.id ?? 'exhibition-heritage-hall'}`);
+const tourPath = computed(() => `/manage/tours/${tourStore.activeTours[0]?.id ?? 'tour-default-route'}`);
+
+const trashCount = computed(
+  () =>
+    exhibitionStore.deletedExhibitions.length +
+    artifactStore.deletedArtifacts.length +
+    tourStore.deletedTours.length +
+    annotationStore.deletedAnnotations.length
+);
 
 const themeOverrides: GlobalThemeOverrides = {
   common: {
@@ -73,3 +85,9 @@ onMounted(async () => {
   ready.value = true;
 });
 </script>
+
+<style scoped>
+.recycle-link {
+  position: relative;
+}
+</style>
